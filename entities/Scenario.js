@@ -23,75 +23,72 @@ module.exports = class Scenario {
 
   parseScenario() {
     return new Promise((resolve, reject) => {
+      const errors = []
       fs.readFile(this.paths.scenario, { encoding: 'utf-8' }, (err, lines) => {
-        if (err) {
-          reject(new ParseError(null, this.dirName, err))
-        } else {
-          const text = lines.split(/\r?\n/)
-          if (text[0].indexOf('#') === -1)
-            reject(
-              new ParseError(
-                `Error parsing ${this.dirPath}. Could not find adventure name!`,
-                this.dirName
-              )
+        if (err) return errors.push(new ParseError(null, this.dirName, err))
+        const text = lines.split(/\r?\n/)
+        if (text[0].indexOf('#') === -1)
+          return errors.push(
+            new ParseError(
+              `Error parsing ${this.dirPath}. Could not find adventure name!`,
+              this.dirName
             )
-          this.name = text[0].slice(text[0].indexOf('#') + 1)
-          const nodes = text
-            .slice(1)
-            .join('\n')
-            .split('#')
-            .filter(t => !/^\s*$/.test(t))
-          const promises = []
-          for (const node of nodes) {
-            // This part SUCKED
-            const separate = split(node, '\n', 2)
-            let jsonString = separate[1].trim()
-            try {
-              const exec = textRegex.exec(jsonString)
-              if (exec) jsonString = jsonString.replace(textRegex, '')
-              const json = JSON5.parse(jsonString)
-              json.text = /[^"]{5,}/gi.exec(exec[0])[0]
-              const node = new Node(this, separate[0].trim().toLowerCase(), json)
-              promises.push(node.parseNode())
-            } catch (err) {
-              if (separate[0].trim() === 'RepairHydrationDeath')
-                console.debug(textRegex.exec(separate[1].trim()))
-              reject(
-                new ParseError(`Error parsing ${separate[0].trim()}: ${err.message}`, this.name)
-              )
-            }
+          )
+        this.name = text[0].slice(text[0].indexOf('#') + 1)
+        const nodes = text
+          .slice(1)
+          .join('\n')
+          .split('#')
+          .filter(t => !/^\s*$/.test(t))
+        const promises = []
+        for (const node of nodes) {
+          // This part SUCKED
+          const separate = split(node, '\n', 2)
+          let jsonString = separate[1].trim()
+          try {
+            const exec = textRegex.exec(jsonString)
+            if (exec) jsonString = jsonString.replace(textRegex, '')
+            const json = JSON5.parse(jsonString)
+            json.text = /[^"]{5,}/gi.exec(exec[0])[0]
+            const node = new Node(this, separate[0].trim().toLowerCase(), json)
+            promises.push(node.parseNode())
+          } catch (err) {
+            errors.push(
+              new ParseError(`Error parsing ${separate[0].trim()}: ${err.message}`, this.name)
+            )
           }
-          Promise.allSettled(promises).then(results => {
-            results.forEach(res => {
-              if (res.status === 'fulfilled') {
-                if (this.nodes[res.value.name])
-                  reject(res.value.getError('There is already a node with the name %name%!'))
-                else this.nodes[res.value.name] = res.value
-              } else reject(res.reason)
-            })
-            Object.values(this.nodes).forEach(n => {
-              if (n.links) {
-                n.links
-                  .filter(l => !l.endscenario)
-                  .forEach(l => {
-                    if (!this.nodes[l.link.toLowerCase()]) {
-                      reject(n.getError('Cannot find link location %1% for %name%!', l.link))
-                    }
-                  })
-              }
-            })
-            if (this.nodes.start) this.startNode = this.nodes.start
-            else
-              reject(
-                new ParseError(
-                  `Could not find Start node for ${chalk.bgRed.white(this.name)}`,
-                  this.name
-                ),
-                this.name
-              )
-            resolve(this)
-          })
         }
+        Promise.allSettled(promises).then(results => {
+          results.forEach(res => {
+            if (res.status === 'fulfilled') {
+              if (this.nodes[res.value.name])
+                errors.push(res.value.getError('There is already a node with the name %name%!'))
+              else this.nodes[res.value.name] = res.value
+            } else errors.push(res.reason)
+          })
+          Object.values(this.nodes).forEach(n => {
+            if (n.links) {
+              n.links
+                .filter(l => !l.endscenario)
+                .forEach(l => {
+                  if (!this.nodes[l.link.toLowerCase()]) {
+                    errors.push(n.getError('Cannot find link location %1% for %name%!', l.link))
+                  }
+                })
+            }
+          })
+          if (this.nodes.start) this.startNode = this.nodes.start
+          else
+            errors.push(
+              new ParseError(
+                `Could not find Start node for ${chalk.bgRed.white(this.name)}`,
+                this.name
+              ),
+              this.name
+            )
+          if (errors.length) reject(errors)
+          else resolve(this)
+        })
       })
     })
   }

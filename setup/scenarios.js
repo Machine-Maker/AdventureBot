@@ -19,17 +19,22 @@ module.exports.setup = bot =>
 
     const scenarios = []
     Promise.allSettled(promises).then(results => {
+      const errors = []
       results.forEach(res => {
         if (res.status === 'fulfilled') {
           scenarios.push(res.value)
           console.log(`Successfully loaded ${chalk.inverse(res.value.name)}!`)
-        } else {
-          console.warn(
-            `Error loading ${chalk.bgRed.white(res.reason.scenario)}!\n${
-              res.reason.reason ? res.reason.reason.stack : res.reason.stack
-            }`
-          )
-        }
+        } else
+          errors.push({
+            scenario: chalk.bgRed.white(res.reason[0].scenario),
+            errors: res.reason
+          })
+      })
+      errors.forEach(err => {
+        console.warn(`Error loading ${err.scenario}!`)
+        err.errors.forEach(e =>
+          console.warn(`${e.reason.reason ? e.reason.reason.stack : e.reason.stack}`)
+        )
       })
       // TODO Add scenarios to database
       console.log(`Loaded ${scenarios.length} adventure${scenarios.length === 1 ? '' : 's'}`)

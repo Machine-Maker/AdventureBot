@@ -1,0 +1,15 @@
+# Scenarios
+scenarios
+
+broken_scenarios
+
+InviteSystem.js
+
+# Node modules
+node_modules
+
+# Environment
+\.env
+
+# Database
+*.sqlite3

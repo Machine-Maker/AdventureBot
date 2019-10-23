@@ -64,3 +64,19 @@ module.exports.REMOVEITEM = (itemName, count) =>
     .addField('Item', itemName, true)
     .addField('Count', count, true)
     .setFooter('Use !inventory to view your current inventory')
+
+module.exports.INVENTORY_EMPTY = footer =>
+  new RichEmbed()
+    .setTitle('**Your inventory is empty!**')
+    .setColor('RED')
+    .setFooter(footer)
+
+module.exports.INVENTORY = (items, footer) => {
+  if (items.length === 0) return this.INVENTORY_EMPTY(footer)
+  const embed = new RichEmbed()
+    .setDescription('Here is your inventory')
+    .setColor('#007f00')
+    .setFooter(footer)
+  items.forEach(i => embed.addField(i.name, i.count, true))
+  return embed
+}

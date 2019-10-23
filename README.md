@@ -3,12 +3,13 @@ TO-DO:
 - ~~Give/TakeExp~~
 - ~~choice chains~~
 - ~~links~~
-- Actions (~~GiveExp~~, ~~TakeExp~~, ~~SetFlag~~, ~~DelFlag~~, ~~Death flag~~)
+- Actions (~~GiveExp~~, ~~TakeExp~~, ~~SetFlag~~, ~~DelFlag~~, ~~Death flag~~, ~~AddItem~~, ~~RemoveItem~~)
 - ~~EndSession Link~~
 - ~~accumulating Exp~~
 - ~~health actions~~
 - ~~levels~~
-- damage increase/reduction
+- ~~damage increase/reduction~~
+- ~~inventory cmd~~
 - ~~Link actions~~
 - Link conditions
 - Documentation (partial)

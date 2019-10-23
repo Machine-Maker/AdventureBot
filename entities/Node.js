@@ -46,7 +46,6 @@ const actions = {
     }
   }
 }
-// TODO: Add other action types
 
 module.exports = class Node {
   constructor(scenario, name, config) {
@@ -104,7 +103,6 @@ module.exports = class Node {
                   this.nodeActions.push(actions[info[0][0]](item, info[1][1]))
                 } else throw this.getError('%name% has an invalid item %1%!', itemName)
               }
-              // TODO Add 2 argument actions
             }
           })
         }

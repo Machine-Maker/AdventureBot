@@ -23,6 +23,14 @@ module.exports.Player = class Player {
     } else Object.assign(this, profile)
   }
 
+  damage() {
+    let max = 14
+    this.items.forEach(i => {
+      if (i.damage && i.damage > max) max = i.damage
+    })
+    return max
+  }
+
   inGame() {
     return !!this.scenario_name
   }
@@ -36,8 +44,8 @@ module.exports.Player = class Player {
     return `
       HP: ${this.health}/100${'\u2001'.repeat(3)}
       XP: ${this.xp}/${nextXPAmount}${'\u2001'.repeat(3)}
-      Level: ${LEVEL_REQS.indexOf(nextXPAmount) + 1}${'\u2001'.repeat(2)}
-      Damage: ${this.damage || 14}${'\u2001'.repeat(2)}
+      Level: ${LEVEL_REQS.indexOf(nextXPAmount) + 1}${'\u2001'.repeat(3)}
+      Damage: ${this.damage()}${'\u2001'.repeat(2)}
       Lives: ${this.lives}
     `
     // TODO: Damage is based on highest damage item in inventory

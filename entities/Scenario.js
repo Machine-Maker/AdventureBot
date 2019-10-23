@@ -3,6 +3,7 @@ const chalk = require('chalk')
 const JSON5 = require('json5')
 
 const Node = require('./Node')
+const Item = require('./Item')
 const ParseError = require('./ParseError')
 
 const textRegex = /\t?"text"\s*:\s*"([^"]+\r?\n)*.+"\s*,?/gi
@@ -19,11 +20,33 @@ module.exports = class Scenario {
     this.dirName = this.paths.dir.substr(path.lastIndexOf('\\') + 1)
     this.name = null
     this.nodes = {}
+    this.items = []
   }
 
-  parseScenario() {
+  parseScenario(bot) {
     return new Promise((resolve, reject) => {
       const errors = []
+      // Get items if exist
+      if (fs.existsSync(this.paths.items)) {
+        try {
+          const lines = fs
+            .readFileSync(this.paths.items, { encoding: 'utf-8' })
+            .trim()
+            .split('#')
+            .filter(t => !/^\s*$/.test(t))
+          for (const itemStr of lines) {
+            const separate = split(itemStr, '\n', 2).map(
+              Function.prototype.call,
+              String.prototype.trim
+            )
+            this.items.push(new Item(separate[0], JSON.parse(separate[1])))
+          }
+        } catch (err) {
+          errors.push(new ParseError(`Error parsing ITEMS!: ${err.message}`, this.name))
+          this.items = []
+        }
+      }
+
       fs.readFile(this.paths.scenario, { encoding: 'utf-8' }, (err, lines) => {
         if (err) return errors.push(new ParseError(null, this.dirName, err))
         const text = lines.split(/\r?\n/)
@@ -43,7 +66,7 @@ module.exports = class Scenario {
         const promises = []
         for (const node of nodes) {
           // This part SUCKED
-          const separate = split(node, '\n', 2)
+          const separate = split(node, '\n', 2).map(Function.prototype.call, String.prototype.trim)
           let jsonString = separate[1].trim()
           try {
             const exec = textRegex.exec(jsonString)
@@ -51,13 +74,14 @@ module.exports = class Scenario {
             const json = JSON5.parse(jsonString)
             json.text = /[^"]{5,}/gi.exec(exec[0])[0]
             const node = new Node(this, separate[0].trim().toLowerCase(), json)
-            promises.push(node.parseNode())
+            promises.push(node.parseNode(this))
           } catch (err) {
             errors.push(
               new ParseError(`Error parsing ${separate[0].trim()}: ${err.message}`, this.name)
             )
           }
         }
+
         Promise.allSettled(promises).then(results => {
           results.forEach(res => {
             if (res.status === 'fulfilled') {
@@ -86,8 +110,11 @@ module.exports = class Scenario {
               ),
               this.name
             )
-          if (errors.length) reject(errors)
-          else resolve(this)
+          if (errors.length) return reject(errors)
+          bot.db.run('INSERT OR IGNORE INTO scenarios(name) VALUES (?)', [this.name], err => {
+            if (err) console.error(err)
+          })
+          resolve(this)
         })
       })
     })

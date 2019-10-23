@@ -3,7 +3,7 @@ const _ = require('lodash')
 const { RichEmbed } = require('discord.js')
 
 const ParseError = require('./ParseError')
-const { INFO } = require('../setup/embeds')
+const { INFO, ADDITEM, REMOVEITEM } = require('../setup/embeds')
 
 const requiredAttrs = ['text']
 
@@ -20,7 +20,6 @@ const availActions = {
   takedamage: [['takedamage', integerCheck]]
 }
 
-// Handle death message in updatePlayer()
 const actions = {
   giveexp: amount => (player, msg) => {
     player.xp += amount
@@ -31,7 +30,21 @@ const actions = {
     msg.reply(INFO.setDescription(`You took ${amount} damage!`))
   },
   setflag: flag => (player, msg) => player.flags.push(flag),
-  unsetflag: flag => (player, msg) => _.remove(player.flags, f => f === flag)
+  unsetflag: flag => (player, msg) => _.remove(player.flags, f => f === flag),
+  additem: (item, count) => (player, msg) => {
+    const curItem = player.items.find(i => i.name === item.name)
+    if (curItem) curItem.count += count
+    else player.items.push({ ...item, count })
+    msg.reply(ADDITEM(item.name, count))
+  },
+  removeitem: (item, count) => (player, msg) => {
+    const curItem = player.items.find(i => i.name === item.name)
+    if (curItem) {
+      curItem.count -= count
+      if (curItem.count <= 0) player.items = player.items.filter(i => i.name !== item.name)
+      msg.reply(REMOVEITEM(item.name, count))
+    }
+  }
 }
 // TODO: Add other action types
 
@@ -58,7 +71,7 @@ module.exports = class Node {
     }
   }
 
-  parseNode() {
+  parseNode(scenario) {
     return new Promise((resolve, reject) => {
       try {
         requiredAttrs.forEach(attr => {
@@ -84,6 +97,13 @@ module.exports = class Node {
             else {
               const info = Object.entries(a)
               if (info.length === 1) this.nodeActions.push(actions[info[0][0]](info[0][1]))
+              else if (info.length === 2) {
+                const itemName = info[0][1]
+                const item = scenario.items.find(i => i.name === itemName)
+                if (item) {
+                  this.nodeActions.push(actions[info[0][0]](item, info[1][1]))
+                } else throw this.getError('%name% has an invalid item %1%!', itemName)
+              }
               // TODO Add 2 argument actions
             }
           })
@@ -105,7 +125,18 @@ module.exports = class Node {
                   const info = Object.entries(lAction)
                   if (info.length === 1)
                     this.linkActions[l.command].push(actions[info[0][0]](info[0][1]))
-                  // TODO: Add 2 argument actions
+                  else if (info.length === 2) {
+                    const itemName = info[0][1]
+                    const item = scenario.items.find(i => i.name === itemName)
+                    if (item)
+                      this.linkActions[l.command].push(actions[info[0][0]](item, info[1][1]))
+                    else
+                      throw this.getError(
+                        '%name% has an invalid item %1% on link %2%',
+                        itemName,
+                        l.command
+                      )
+                  }
                 })
               }
             }

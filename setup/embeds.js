@@ -48,3 +48,19 @@ module.exports.REVIVE_OTHER = (reviver, footer) =>
     .setFooter(footer)
 
 module.exports.INFO = new RichEmbed().setColor('#007f00')
+
+module.exports.ADDITEM = (itemName, count) =>
+  new RichEmbed()
+    .setDescription('You have picked up something up!')
+    .setColor('#007f00')
+    .addField('Item', itemName, true)
+    .addField('Count', count, true)
+    .setFooter('Use !inventory to view your current inventory')
+
+module.exports.REMOVEITEM = (itemName, count) =>
+  new RichEmbed()
+    .setDescription('You have dropped something!')
+    .setColor('#007f00')
+    .addField('Item', itemName, true)
+    .addField('Count', count, true)
+    .setFooter('Use !inventory to view your current inventory')

@@ -13,7 +13,7 @@ module.exports.setup = bot =>
       console.log('Parsing scenarios...')
       scenarioFiles.forEach(dir => {
         const scenario = new Scenario(`${bot.config.scenario_directory}/${dir}`)
-        promises.push(scenario.parseScenario())
+        promises.push(scenario.parseScenario(bot))
       })
     }
 
@@ -36,7 +36,6 @@ module.exports.setup = bot =>
           console.warn(`${e.reason.reason ? e.reason.reason.stack : e.reason.stack}`)
         )
       })
-      // TODO Add scenarios to database
       console.log(`Loaded ${scenarios.length} adventure${scenarios.length === 1 ? '' : 's'}`)
       resolve(scenarios)
     })

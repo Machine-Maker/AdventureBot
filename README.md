@@ -3,16 +3,21 @@ TO-DO:
 - ~~Give/TakeExp~~
 - ~~choice chains~~
 - ~~links~~
-- Actions (~~GiveExp~~, ~~TakeExp~~, SetFlag, DelFlag, ~~Death flag~~)
+- Actions (~~GiveExp~~, ~~TakeExp~~, ~~SetFlag~~, ~~DelFlag~~, ~~Death flag~~)
 - ~~EndSession Link~~
 - ~~accumulating Exp~~
-- health actions
-- levels
+- ~~health actions~~
+- ~~levels~~
 - damage increase/reduction
 - ~~Link actions~~
 - Link conditions
 - Documentation (partial)
 - custom colors
+- Conditions from flags
+- ~~persistent saving~~
+- enemy encounters
+- ~~invite system~~
+- dev commands (partially complete)
 
 
 # Last Oasis Choose Your Own Adventure

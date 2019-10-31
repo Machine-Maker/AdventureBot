@@ -1,0 +1,10 @@
+{
+  "mainGuild": "633369685169143840",
+  "roles": {
+    "cyoa_adminRole": "633442064574447636",
+    "cyoa_devRole": "633442102260269095"
+  },
+  "scenario_directory": "./scenarios",
+  "database_location": "./adventure_info.sqlite3",
+  "startScenario": "All Your Bases Are Belong To Me"
+}

@@ -3,7 +3,9 @@ const _ = require('lodash')
 const { RichEmbed } = require('discord.js')
 
 const ParseError = require('./ParseError')
-const { INFO, ADDITEM, REMOVEITEM } = require('../setup/embeds')
+const actions = require('./actions')
+const Enemy = require('./Enemy')
+const Link = require('./Link')
 
 const requiredAttrs = ['text']
 
@@ -20,40 +22,11 @@ const availActions = {
   takedamage: [['takedamage', integerCheck]]
 }
 
-const actions = {
-  giveexp: amount => (player, msg) => {
-    player.xp += amount
-    msg.reply(INFO.setDescription(`You have gained ${amount} xp`))
-  },
-  takedamage: amount => (player, msg) => {
-    player.health = Math.max(0, player.health - amount)
-    msg.reply(INFO.setDescription(`You took ${amount} damage!`))
-  },
-  setflag: flag => (player, msg) => player.flags.push(flag),
-  unsetflag: flag => (player, msg) => _.remove(player.flags, f => f === flag),
-  additem: (item, count) => (player, msg) => {
-    const curItem = player.items.find(i => i.name === item.name)
-    if (curItem) curItem.count += count
-    else player.items.push({ ...item, count })
-    msg.reply(ADDITEM(item.name, count))
-  },
-  removeitem: (item, count) => (player, msg) => {
-    const curItem = player.items.find(i => i.name === item.name)
-    if (curItem) {
-      curItem.count -= count
-      if (curItem.count <= 0) player.items = player.items.filter(i => i.name !== item.name)
-      msg.reply(REMOVEITEM(item.name, count))
-    }
-  }
-}
-
 module.exports = class Node {
   constructor(scenario, name, config) {
     this.scenario = scenario
     this.name = name
     this.nodeActions = []
-    this.cmds = []
-    this.linkActions = []
     this.ending = false
     this.death = false
     Object.assign(this, toLowerCase(config))
@@ -70,7 +43,7 @@ module.exports = class Node {
     }
   }
 
-  parseNode(scenario) {
+  parseNode() {
     return new Promise((resolve, reject) => {
       try {
         requiredAttrs.forEach(attr => {
@@ -98,7 +71,7 @@ module.exports = class Node {
               if (info.length === 1) this.nodeActions.push(actions[info[0][0]](info[0][1]))
               else if (info.length === 2) {
                 const itemName = info[0][1]
-                const item = scenario.items.find(i => i.name === itemName)
+                const item = this.scenario.items.find(i => i.name === itemName)
                 if (item) {
                   this.nodeActions.push(actions[info[0][0]](item, info[1][1]))
                 } else throw this.getError('%name% has an invalid item %1%!', itemName)
@@ -110,37 +83,22 @@ module.exports = class Node {
           if (!Array.isArray(this.links))
             throw this.getError('Links attr must be an Array for node %name%!')
           // TODO: Verify no duplicate links
+          const links = []
           this.links.forEach(l => {
             if ((!l.command || !l.link) && !l.endscenario)
               throw this.getError('Link for %name% does not have Link or Command attrs!')
             if (l.endscenario) this.ending = true
             else {
-              this.cmds.push(l.command.toLowerCase())
-              this.embed.addField(l.command, l.description || '\u200b', true)
-              if (l.actions && l.actions.length) {
-                this.linkActions[l.command] = []
-                l.actions.forEach(lAction => {
-                  const info = Object.entries(lAction)
-                  if (info.length === 1)
-                    this.linkActions[l.command].push(actions[info[0][0]](info[0][1]))
-                  else if (info.length === 2) {
-                    const itemName = info[0][1]
-                    const item = scenario.items.find(i => i.name === itemName)
-                    if (item)
-                      this.linkActions[l.command].push(actions[info[0][0]](item, info[1][1]))
-                    else
-                      throw this.getError(
-                        '%name% has an invalid item %1% on link %2%',
-                        itemName,
-                        l.command
-                      )
-                  }
-                })
-              }
+              links.push(new Link(this, l))
             }
           })
+          this.links = links
         } else if (!this.actions || !this.actions.find(a => a.setflag.toLowerCase() === 'dead'))
           throw this.getError('Could not find Links for node %name%!')
+        if (this.enemy) {
+          this.enemy = new Enemy(this, this.enemy)
+          this.enemy.validate()
+        }
       } catch (err) {
         reject(err)
       }
@@ -148,22 +106,43 @@ module.exports = class Node {
     })
   }
 
-  resolveActions(playerData, msg, command) {
-    if (!command) {
+  resolveActions(player, msg, link) {
+    if (!link) {
       this.nodeActions.forEach(a => {
-        a(playerData, msg)
+        a(player, msg)
       })
     } else {
-      if (!this.linkActions[command] || !this.linkActions[command].length) return playerData
-      this.linkActions[command].forEach(a => {
-        a(playerData, msg)
-      })
+      if (!link.actions || !link.actions.length) return player
+      link.actions.forEach(a => a(player, msg))
     }
-    return playerData
+    return player
   }
 
   resolveEmbed(player) {
-    return new RichEmbed(Object.assign({}, this.embed)).setFooter(player.footer())
+    this.embed.fields = []
+    const tempEmbed = new RichEmbed(Object.assign({}, this.embed)).setFooter(player.footer())
+    if (!this.enemy && !this.death) {
+      this.links.forEach(l => {
+        if (l.resolveConditions()) tempEmbed.addField(l.command, l.description, true)
+      })
+    }
+    return tempEmbed
+  }
+
+  resolveEnemy(player, msg) {
+    if (!this.enemy) return
+    player.enemy = {
+      name: this.enemy.name,
+      damage: this.enemy.damage,
+      hp: this.enemy.hp,
+      description: this.enemy.description,
+      victorytext: this.enemy.victorytext,
+      defeattext: this.enemy.defeattext,
+      action: null,
+      direction: null
+    }
+    msg.reply(this.enemy.getEmbed(player))
+    player.save()
   }
 
   getError(msg, ...args) {

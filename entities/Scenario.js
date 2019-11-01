@@ -74,7 +74,7 @@ module.exports = class Scenario {
             const json = JSON5.parse(jsonString)
             json.text = /[^"]{5,}/gi.exec(exec[0])[0]
             const node = new Node(this, separate[0].trim().toLowerCase(), json)
-            promises.push(node.parseNode(this))
+            promises.push(node.parseNode())
           } catch (err) {
             errors.push(
               new ParseError(`Error parsing ${separate[0].trim()}: ${err.message}`, this.name)

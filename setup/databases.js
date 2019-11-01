@@ -40,6 +40,7 @@ module.exports.setup = bot =>
           xp INTEGER NOT NULL DEFAULT 0,
           items TEXT NOT NULL DEFAULT "[]",
           flags TEXT NOT NULL DEFAULT "[]",
+          enemy TEXT NOT NULL DEFAULT "{}",
           lives INTEGER NOT NULL DEFAULT 2,
           death_count INTEGER NOT NULL DEFAULT 0,
           used_invite BOOLEAN NOT NULL DEFAULT 0,

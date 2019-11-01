@@ -1,7 +1,14 @@
 const bot = require('../bot')
 const { db } = require('../setup/databases')
 const { encrypt } = require('../InviteSystem')
-const { COMPLETE, DEATH, NEED_REVIVE, SELF_REVIVE, REVIVE_OTHER } = require('../setup/embeds')
+const {
+  COMPLETE,
+  DEATH,
+  NEED_REVIVE,
+  SELF_REVIVE,
+  REVIVE_OTHER,
+  DAMAGE
+} = require('../setup/embeds')
 
 // eslint-disable-next-line prettier/prettier
 const LEVEL_REQS = [500, 1000, 1500, 2000, 3500, 4000, 5000, 6000, 7000, 8000, 9000, 10000, 11500, 13000, 14500, 16000, 17500, 20000, 23000, 26000, 30000, 34000, 38000, 43000, 50000, 60000, 70000, 80000, 90000, 100000]
@@ -16,6 +23,7 @@ module.exports.Player = class Player {
       this.xp = 0
       this.items = []
       this.flags = []
+      this.enemy = null
       this.lives = 2
       this.death_count = 0
       this.used_invite = false
@@ -42,13 +50,12 @@ module.exports.Player = class Player {
   footer() {
     const nextXPAmount = LEVEL_REQS.find(v => v > this.xp)
     return `
-      HP: ${this.health}/100${'\u2001'.repeat(3)}
-      XP: ${this.xp}/${nextXPAmount}${'\u2001'.repeat(3)}
-      Level: ${LEVEL_REQS.indexOf(nextXPAmount) + 1}${'\u2001'.repeat(3)}
+      HP: ${this.health}/100${'\u2001'.repeat(2)}
+      XP: ${this.xp}/${nextXPAmount}${'\u2001'.repeat(2)}
+      Level: ${LEVEL_REQS.indexOf(nextXPAmount) + 1}${'\u2001'.repeat(2)}
       Damage: ${this.damage()}${'\u2001'.repeat(2)}
       Lives: ${this.lives}
     `
-    // TODO: Damage is based on highest damage item in inventory
   }
 
   startRandom(msg, bot) {
@@ -67,12 +74,20 @@ module.exports.Player = class Player {
     this.startRandom(msg, bot)
   }
 
-  triggerDeath(msg, bot) {
+  async takeDamage(msg) {
+    const damageDealt = Math.min(Math.min(this.health, this.enemy.damage), 40)
+    this.health -= damageDealt
+    this.enemy.action = this.enemy.direction = null
+    await msg.reply(DAMAGE(this.enemy.name, 'you', damageDealt, this))
+  }
+
+  triggerDeath(msg) {
     this.death_count++
     this.lives--
     this.health = 0
     this.scenario_name = null
     this.node_name = null
+    this.enemy = null
     this.flags.push('dead')
     msg.reply(DEATH(this.footer()))
     if (this.lives > 0) this.respawn(msg, bot)
@@ -119,6 +134,7 @@ module.exports.Player = class Player {
     this.flags = []
     this.scenario_name = null
     this.node_name = null
+    this.enemy = null
     if (hard) this.lives = 2
     if (hard) this.xp = 0
     if (hard) this.items = []
@@ -133,8 +149,9 @@ module.exports.Player = class Player {
       node_name="${this.node_name}",
       health=${this.health},
       xp=${this.xp},
-      items='${JSON.stringify(this.items)}',
-      flags='${JSON.stringify(this.flags)}',
+      items='${JSON.stringify(this.items).replace(/'/g, "''")}',
+      flags='${JSON.stringify(this.flags).replace(/'/g, "''")}',
+      enemy='${this.enemy ? JSON.stringify(this.enemy, null, 2).replace(/'/g, "''") : '{}'}',
       lives=${this.lives},
       death_count=${this.death_count},
       used_invite=${this.used_invite ? 1 : 0},
@@ -168,6 +185,8 @@ module.exports.findPlayer = (snowflake, create) =>
       if (row) {
         row.items = JSON.parse(row.items)
         row.flags = JSON.parse(row.flags)
+        if (row.enemy === '{}') row.enemy = null
+        else row.enemy = JSON.parse(row.enemy)
         row.used_invite = row.used_invite !== 0
         row = new this.Player(snowflake, row)
       } else {

@@ -5,6 +5,8 @@ broken_scenarios
 
 InviteSystem.js
 
+CombatSystem.js
+
 # Node modules
 node_modules
 

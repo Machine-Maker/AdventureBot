@@ -1,5 +1,6 @@
 const { findPlayer } = require('../entities/Player')
 const { parseInvite, verifyKey, INVITE_WELCOME } = require('../InviteSystem')
+const { handleMsg } = require('../CombatSystem')
 
 module.exports = {
   event: 'message',
@@ -32,16 +33,28 @@ module.exports = {
           }
           const scenario = bot.scenarios.find(s => s.name === player.scenario_name)
           const node = scenario.nodes[player.node_name]
+
+          if (player.enemy) {
+            if (player.inProgress) return
+            const time = await msg.react('\u23F3')
+            player.inProgress = true
+            await handleMsg(msg, player)
+            player.inProgress = false
+            time.remove()
+            msg.react('\u2705')
+            player.save()
+            return
+          }
+
           if (node.ending) return player.endCurrent(msg, bot)
-          if (node.cmds.indexOf(msg.content.toLowerCase()) < 0) return
-          node.resolveActions(player, msg, msg.content.toLowerCase())
+          const link = node.links.find(l => l.command.toLowerCase() === msg.content.toLowerCase())
+          if (!link) return
+          node.resolveActions(player, msg, link)
           player.save()
           console.debug(`Completed node ${node.name}`)
           const nextNode =
             scenario.nodes[
-              node.links
-                .find(l => l.command.toLowerCase() === msg.content.toLowerCase())
-                .link.toLowerCase()
+              node.links.find(l => l.command.toLowerCase() === msg.content.toLowerCase()).link
             ]
           if (!nextNode) {
             return console.error(
@@ -51,13 +64,20 @@ module.exports = {
           nextNode.resolveActions(player, msg)
           player.node_name = nextNode.name
           player.save()
-          msg.reply(nextNode.resolveEmbed(player))
-          if (player.health <= 0 || nextNode.death) {
-            player.triggerDeath(msg, bot)
-          } else if (nextNode.ending) {
-            player.endCurrent(msg, bot)
-          }
-          // TODO: Death and End
+          msg
+            .reply(nextNode.resolveEmbed(player))
+            .then(msg1 => {
+              // Death and End Scenario
+              if (player.health <= 0 || nextNode.death) {
+                return player.triggerDeath(msg)
+              } else if (nextNode.ending) {
+                return player.endCurrent(msg, bot)
+              }
+
+              // Enemy
+              nextNode.resolveEnemy(player, msg1)
+            })
+            .catch(err => console.error(err))
         })
         .catch(err => console.error(err))
     })

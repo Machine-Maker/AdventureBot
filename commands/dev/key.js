@@ -1,6 +1,6 @@
 const { Command } = require('discord.js-commando')
 
-const { encrypt, OASIS_KEY } = require('../../InviteSystem')
+const { encrypt } = require('../../InviteSystem')
 
 module.exports = class KeyCommand extends Command {
   constructor(client) {

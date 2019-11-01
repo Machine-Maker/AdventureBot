@@ -16,9 +16,9 @@ TO-DO:
 - custom colors
 - Conditions from flags
 - ~~persistent saving~~
-- enemy encounters
+- ~~enemy encounters~~
 - ~~invite system~~
-- dev commands (partially complete)
+- ~~dev commands~~ (partially complete)
 
 
 # Last Oasis Choose Your Own Adventure

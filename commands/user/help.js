@@ -14,7 +14,6 @@ module.exports = class HelpCommand extends Command {
       description: 'General help',
       details: 'Shows help information depending on where you are in the game',
       argsPromptLimit: 0,
-      argsCount: 0,
       throttling: {
         usages: 1,
         duration: 30
@@ -23,6 +22,7 @@ module.exports = class HelpCommand extends Command {
   }
 
   run(msg) {
+    if (msg.channel.type !== 'dm') return
     if (!msg.content.startsWith(this.client.commandPrefix)) return
     findPlayer(msg.author.id, false).then(player => {
       if (!player) msg.reply(INVITE_WELCOME)

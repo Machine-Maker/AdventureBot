@@ -13,7 +13,6 @@ module.exports = class InventoryCommand extends Command {
       description: 'Displays inventory',
       details: 'Shows the users game inventory',
       argsPromptLimit: 0,
-      argsCount: 0,
       throttling: {
         usages: 1,
         duration: 30
@@ -22,6 +21,7 @@ module.exports = class InventoryCommand extends Command {
   }
 
   run(msg) {
+    if (msg.channel.type !== 'dm') return
     if (!msg.content.startsWith(this.client.commandPrefix)) return
     findPlayer(msg.author.id, false).then(player => {
       if (!player || !player.inGame())

@@ -1,17 +1,17 @@
 const { Command } = require('discord.js-commando')
-const { RichEmbed } = require('discord.js')
 
 const { parseInvite } = require('../../InviteSystem')
+const { findPlayer } = require('../../entities/Player')
 
-module.exports = class KeyInfoCommand extends Command {
+module.exports = class ReviveCommand extends Command {
   constructor(client) {
     super(client, {
-      name: 'keyinfo',
-      aliases: ['keyi', 'info'],
-      group: 'dev',
-      memberName: 'keyinfo',
-      description: 'Displays key info',
-      details: 'Shows the player and death count associated with this key',
+      name: 'revive',
+      aliases: ['rev'],
+      group: 'admin',
+      memberName: 'revive',
+      description: 'Revies a player',
+      details: 'Using a given key, revies that player',
       argsPromptLimit: 0,
       args: [
         {
@@ -31,6 +31,7 @@ module.exports = class KeyInfoCommand extends Command {
   }
 
   hasPermission(msg) {
+    // TODO: Remove dev role from perms after launch
     const member = this.client.mainGuild.members.get(msg.author.id)
     return (
       member &&
@@ -41,14 +42,9 @@ module.exports = class KeyInfoCommand extends Command {
 
   run(msg, args) {
     if (!msg.content.startsWith(this.client.commandPrefix)) return
-    msg.reply(
-      new RichEmbed()
-        .setTitle('Key Info')
-        .setColor('GREEN')
-        .addField('Key', args.key.key, true)
-        .addField('User', `<@${args.key.id}>`, true)
-        .addField('Death Count', args.key.deathCount, true)
-        .setTimestamp()
-    )
+    findPlayer(args.key.id, false).then(player => {
+      if (!player || !player.isDead() || player.death_count !== args.key.deathCount) return
+      console.debug('pass')
+    })
   }
 }

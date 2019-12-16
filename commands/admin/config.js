@@ -28,6 +28,7 @@ module.exports = class ConfigCommand extends Command {
   }
 
   run(msg, args) {
+    if (!msg.content.startsWith(this.client.commandPrefix)) return
     if (args.length === 1 || args.length === 0) {
       let m = this.client.config
       if (args.length !== 0) {

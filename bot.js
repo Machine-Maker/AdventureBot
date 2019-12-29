@@ -1,4 +1,10 @@
 require('dotenv').config()
+
+// Argument setup
+process.HIDE_WARNINGS = false
+const argv = process.argv.slice(2)
+if (argv.includes('-nw') || argv.includes('--no-warnings')) process.HIDE_WARNINGS = true
+
 const { CommandoClient } = require('discord.js-commando')
 const path = require('path')
 

@@ -36,7 +36,7 @@ module.exports = class Node {
       .setColor('#a92d09')
     if (this.imageurl) {
       if (this.imageurl.startsWith('http')) this.embed.setImage(this.imageurl)
-      else
+      else if (!process.HIDE_WARNINGS)
         console.warn(
           `${this.scenario.name}::${this.name} has an invalid image url: ${this.imageurl}`
         )

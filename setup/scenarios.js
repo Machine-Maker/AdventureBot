@@ -8,7 +8,11 @@ module.exports.setup = bot =>
     const promises = []
     const scenarioFiles = fs
       .readdirSync(bot.config.scenario_directory)
-      .filter(name => fs.statSync(`${bot.config.scenario_directory}/${name}`).isDirectory())
+      .filter(
+        name =>
+          !name.startsWith('.') &&
+          fs.statSync(`${bot.config.scenario_directory}/${name}`).isDirectory()
+      )
     if (scenarioFiles.length) {
       console.log('Parsing scenarios...')
       scenarioFiles.forEach(dir => {

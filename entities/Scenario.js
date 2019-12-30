@@ -107,8 +107,7 @@ module.exports = class Scenario {
               new ParseError(
                 `Could not find Start node for ${chalk.bgRed.white(this.name)}`,
                 this.name
-              ),
-              this.name
+              )
             )
           if (errors.length) return reject(errors)
           bot.db.run('INSERT OR IGNORE INTO scenarios(name) VALUES (?)', [this.name], err => {

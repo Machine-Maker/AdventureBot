@@ -1,5 +1,4 @@
 const chalk = require('chalk')
-const _ = require('lodash')
 const { RichEmbed } = require('discord.js')
 
 const ParseError = require('./ParseError')

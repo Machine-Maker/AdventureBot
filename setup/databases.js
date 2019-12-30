@@ -1,6 +1,5 @@
 const fs = require('fs')
 const sqlite3 = require('sqlite3')
-const { promisify } = require('util')
 
 module.exports.setup = bot =>
   new Promise((resolve, reject) => {
@@ -12,8 +11,6 @@ module.exports.setup = bot =>
     })
 
     module.exports.db = db
-
-    const dbRun = promisify(db.run)
 
     Promise.all([
       new Promise((resolve, reject) => {

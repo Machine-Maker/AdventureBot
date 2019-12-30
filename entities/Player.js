@@ -10,8 +10,10 @@ const {
   DAMAGE
 } = require('../setup/embeds')
 
-// eslint-disable-next-line prettier/prettier
+/* eslint-disable */
+// prettier-ignore
 const LEVEL_REQS = [500, 1000, 1500, 2000, 3500, 4000, 5000, 6000, 7000, 8000, 9000, 10000, 11500, 13000, 14500, 16000, 17500, 20000, 23000, 26000, 30000, 34000, 38000, 43000, 50000, 60000, 70000, 80000, 90000, 100000]
+/* eslint-enable */
 
 module.exports.Player = class Player {
   constructor(snowflake, profile = null) {
@@ -55,7 +57,7 @@ module.exports.Player = class Player {
       Level: ${LEVEL_REQS.indexOf(nextXPAmount) + 1}${'\u2001'.repeat(2)}
       Damage: ${this.damage()}${'\u2001'.repeat(2)}
       Lives: ${this.lives}
-    `
+    `.replace(/(\r?\n|\r|^\s*)/gm, '')
   }
 
   startRandom(msg, bot) {
@@ -78,7 +80,7 @@ module.exports.Player = class Player {
     const damageDealt = Math.min(Math.min(this.health, this.enemy.damage), 40)
     this.health -= damageDealt
     this.enemy.action = this.enemy.direction = null
-    await msg.reply(DAMAGE(this.enemy.name, 'you', damageDealt, this))
+    await msg.reply(DAMAGE(this.enemy.name, 'You', damageDealt, this))
   }
 
   triggerDeath(msg) {

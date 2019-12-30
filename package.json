@@ -42,5 +42,10 @@
     "execMap": {
       "js": "node --no-deprecation"
     }
+  },
+  "prettier": {
+    "semi": false,
+    "singleQuote": true,
+    "printWidth": 100
   }
 }

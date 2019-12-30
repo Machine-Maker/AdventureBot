@@ -86,7 +86,11 @@ module.exports.DAMAGE = (dealer, dealt, damageAmount, player) =>
     .setTitle('**Damage has been done**')
     .setColor('DARK_RED')
     .setFooter('Use !help for help during combat')
-    .setDescription(`${dealer} hit ${dealt} for ${damageAmount} hp! ${dealt} screams in pain!`)
+    .setDescription(
+      `${dealer} hit ${dealt} for ${damageAmount} hp! ${dealt} scream${
+        dealt === 'You' ? '' : 's'
+      } in pain!`
+    )
     .addField('Player HP', player.health, true)
     .addField('Enemy HP', player.enemy.hp, true)
 
@@ -97,12 +101,17 @@ module.exports.DEFEAT = player =>
     .setFooter(player.footer())
     .setDescription(player.enemy.defeattext)
 
-module.exports.VICTORY = player =>
-  new RichEmbed()
+module.exports.VICTORY = (player, links) => {
+  const embed = new RichEmbed()
     .setTitle('**You have defeated the enemy!**')
     .setColor('GREEN')
     .setFooter(player.footer())
     .setDescription(player.enemy.victorytext)
+  links.forEach(l => {
+    if (l.resolveConditions()) embed.addField(l.command, l.description, true)
+  })
+  return embed
+}
 
 module.exports.HELP_IN_GAME = footer =>
   new RichEmbed()

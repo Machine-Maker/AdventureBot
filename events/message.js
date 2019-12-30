@@ -38,7 +38,7 @@ module.exports = {
             if (player.inProgress) return
             const time = await msg.react('\u23F3')
             player.inProgress = true
-            await handleMsg(msg, player)
+            await handleMsg(msg, player, node)
             player.inProgress = false
             time.remove()
             msg.react('\u2705')

@@ -1,25 +1,13 @@
 const chalk = require('chalk')
 const { RichEmbed } = require('discord.js')
 
-const ParseError = require('./ParseError')
-const actions = require('./actions')
+const ParseError = require('./errors/ParseError')
+const actions = require('./funcs/actions')
 const Enemy = require('./Enemy')
 const Link = require('./Link')
+const { availActions } = require('./funcs/utils')
 
 const requiredAttrs = ['text']
-
-const stringCheck = str => (/\S/.test(str) ? str : false)
-const integerCheck = int => (!isNaN(int) ? parseInt(int) : false)
-// TODO: Add item parsing
-const itemCheck = item => item
-const availActions = {
-  setflag: [['setflag', stringCheck]],
-  unsetflag: [['unsetflag', stringCheck]],
-  additem: [['additem', itemCheck], ['count', integerCheck]],
-  removeitem: [['removeitem', itemCheck], ['count', integerCheck]],
-  giveexp: [['giveexp', integerCheck]],
-  takedamage: [['takedamage', integerCheck]]
-}
 
 module.exports = class Node {
   constructor(scenario, name, config) {

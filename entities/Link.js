@@ -1,4 +1,6 @@
-const actions = require('./actions')
+const actions = require('./funcs/actions')
+
+const { conditionCheck } = require('./funcs/utils')
 
 module.exports = class Link {
   constructor(node, data) {
@@ -7,7 +9,7 @@ module.exports = class Link {
     this.description = data.description || '\u200b'
     this.link = data.link.toLowerCase()
     this.actions = []
-    this.condition = data.condition
+    // this.condition = data.condition
     if (data.actions && data.actions.length) {
       data.actions.forEach(a => {
         const info = Object.entries(a)
@@ -24,6 +26,19 @@ module.exports = class Link {
             )
         }
       })
+    }
+
+    if (data.condition) {
+      if (!(data.condition instanceof Object) || data.condition instanceof Array)
+        throw this.node.getError('%name% link %1% is not an object!', this.command)
+
+      if (!conditionCheck(data.condition))
+        throw this.node.getError('%name% has an invalid condition on link %1%', this.command)
+      this.condition = data.condition
+      // const c = Object.entries(this.condition)[0][0]
+      // if (/(and|or|not)/.test(c)) {
+
+      // }
     }
   }
 

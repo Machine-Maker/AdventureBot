@@ -4,7 +4,7 @@ const JSON5 = require('json5')
 
 const Node = require('./Node')
 const Item = require('./Item')
-const ParseError = require('./ParseError')
+const ParseError = require('./errors/ParseError')
 
 const textRegex = /\t?"text"\s*:\s*"([^"]+\r?\n)*.+"\s*,?/gi
 

@@ -1,4 +1,5 @@
-const { INFO, ADDITEM, REMOVEITEM } = require('../setup/embeds')
+const _ = require('lodash')
+const { INFO, ADDITEM, REMOVEITEM } = require('../../setup/embeds')
 
 module.exports = {
   giveexp: amount => (player, msg) => {

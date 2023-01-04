@@ -15,7 +15,7 @@
     "discord.js": "^11.5.1",
     "discord.js-commando": "^0.10.0",
     "dotenv": "^8.1.0",
-    "json5": "^2.1.1",
+    "json5": "^2.2.2",
     "lodash": "^4.17.15",
     "moment": "^2.24.0",
     "sqlite3": "^4.1.0"
